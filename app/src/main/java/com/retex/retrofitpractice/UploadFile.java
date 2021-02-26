@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -23,10 +24,19 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
 import com.android.volley.Request;
+import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -36,103 +46,89 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.text.DateFormat.DEFAULT;
 
 public class UploadFile extends AppCompatActivity implements View.OnClickListener {
     public static final String KEY_User_Document1 = "doc1";
-    ImageView IdProf;
-    Button upload;
-    Button viewImage;
-    private String Document_img1 = "";
-    String IMAGE_BASE_64;
+    ImageView IDProf;
+    Button Upload_Btn;
+    Button view;
+    String colid;
+
+    private String Document_img1="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload_file);
-        initView();
-    }
+        colid = getIntent().getStringExtra("leadid");
+        IDProf=(ImageView)findViewById(R.id.id_prof);
+        Upload_Btn=(Button)findViewById(R.id.UploadBtn);
+        view = findViewById(R.id.btn_view);
 
-    private void initView() {
-        IdProf = findViewById(R.id.id_prof);
-        upload = findViewById(R.id.UploadBtn);
-        viewImage = findViewById(R.id.btn_view);
-        upload.setOnClickListener(this);
-        viewImage.setOnClickListener(this);
-        IdProf.setOnClickListener(new View.OnClickListener() {
+        IDProf.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 selectImage();
+
             }
         });
 
+        Upload_Btn.setOnClickListener(this);
+        view.setOnClickListener(this);
     }
 
-    private void selectImage() {
 
-        final CharSequence[] option = {"Take Photo", "Choose From Gallery", "Cancel"};
+    private void selectImage() {
+        final CharSequence[] options = { "Take Photo", "Choose from Gallery","Cancel" };
         AlertDialog.Builder builder = new AlertDialog.Builder(UploadFile.this);
         builder.setTitle("Add Photo!");
-        builder.setItems(option, new DialogInterface.OnClickListener() {
+        builder.setItems(options, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int item) {
-                if (option[item].equals("Take Photo")) {
+                if (options[item].equals("Take Photo"))
+                {
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    File f = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
-                    //intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
+                    File f = new File(android.os.Environment.getExternalStorageDirectory(), "temp.jpg");
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
                     startActivityForResult(intent, 1);
-                } else if (option[item].equals("Choose From Gallery")) {
-                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                }
+                else if (options[item].equals("Choose from Gallery"))
+                {
+                    Intent intent = new   Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                     startActivityForResult(intent, 2);
-
-                } else if (option[item].equals("Cancel")) {
+                }
+                else if (options[item].equals("Cancel")) {
                     dialog.dismiss();
                 }
-
             }
         });
         builder.show();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        /*Bitmap photo = (Bitmap) data.getExtras().get("data");
-        IdProf.setImageBitmap(photo);*/
-
         if (resultCode == RESULT_OK) {
-
-
-           if (requestCode == 1) {
-                File f = new File(Environment.getExternalStorageDirectory(), toString());
-               Bitmap photo = (Bitmap) data.getExtras().get("data");
-               IdProf.setImageBitmap(photo);
-               ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-               photo.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-               byte[] byteArray = byteArrayOutputStream .toByteArray();
-               String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-
-               Log.e("regfh",""+encoded);
-
-                IMAGE_BASE_64 = encoded.getBytes().toString();
-
-                /*for (File temp : f.listFiles()) {
+            if (requestCode == 1) {
+                File f = new File(Environment.getExternalStorageDirectory().toString());
+                for (File temp : Objects.requireNonNull(f.listFiles())) {
                     if (temp.getName().equals("temp.jpg")) {
                         f = temp;
                         break;
-
                     }
-                }*/
+                }
                 try {
                     Bitmap bitmap;
-                    BitmapFactory.Options bitmapOption = new BitmapFactory.Options();
-                    bitmap = BitmapFactory.decodeFile(f.getAbsolutePath(), bitmapOption);
-                    bitmap = getResizedBitMap(bitmap, 400);
-                    IdProf.setImageBitmap(bitmap);
+                    BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+                    bitmap = BitmapFactory.decodeFile(f.getAbsolutePath(), bitmapOptions);
+                    bitmap=getResizedBitmap(bitmap, 400);
+                    IDProf.setImageBitmap(bitmap);
                     BitMapToString(bitmap);
-                    String path = Environment.getExternalStorageDirectory()
+                    String path = android.os.Environment
+                            .getExternalStorageDirectory()
                             + File.separator
                             + "Phoenix" + File.separator + "default";
                     f.delete();
@@ -150,46 +146,34 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                 } catch (Exception e) {
                     e.printStackTrace();
-
                 }
             } else if (requestCode == 2) {
                 Uri selectedImage = data.getData();
-                String[] filePath = {MediaStore.Images.Media.DATA};
-                Cursor c = getContentResolver().query(selectedImage, filePath, null, null, null);
+                String[] filePath = { MediaStore.Images.Media.DATA };
+                Cursor c = getContentResolver().query(selectedImage,filePath, null, null, null);
                 c.moveToFirst();
                 int columnIndex = c.getColumnIndex(filePath[0]);
                 String picturePath = c.getString(columnIndex);
                 c.close();
                 Bitmap thumbnail = (BitmapFactory.decodeFile(picturePath));
-                thumbnail = getResizedBitMap(thumbnail, 400);
-                IdProf.setImageBitmap(thumbnail);
-               ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-               thumbnail.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-               byte[] byteArray = byteArrayOutputStream .toByteArray();
-               String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-
-               Log.e("choose qq",""+encoded);
-
-               IMAGE_BASE_64 = encoded.getBytes().toString();
-
+                thumbnail=getResizedBitmap(thumbnail, 400);
+                Log.w("image from gallery", picturePath+"");
+                IDProf.setImageBitmap(thumbnail);
+                BitMapToString(thumbnail);
             }
-
-
         }
     }
-
-    private String BitMapToString(Bitmap userImage1) {
+    public String BitMapToString(Bitmap userImage1) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        userImage1.compress(Bitmap.CompressFormat.PNG,100   ,baos);
+        userImage1.compress(Bitmap.CompressFormat.PNG, 60, baos);
         byte[] b = baos.toByteArray();
-        Document_img1 = Base64.encodeToString(b,Base64.DEFAULT);
+        Document_img1 = Base64.encodeToString(b, Base64.DEFAULT);
         return Document_img1;
     }
 
-    private Bitmap getResizedBitMap(Bitmap image, int maxSize) {
+    public Bitmap getResizedBitmap(Bitmap image, int maxSize) {
         int width = image.getWidth();
         int height = image.getHeight();
 
@@ -202,40 +186,14 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
             width = (int) (height * bitmapRatio);
         }
         return Bitmap.createScaledBitmap(image, width, height, true);
-
     }
 
-    @Override
-    public void onClick(View v) {
-
-        switch (v.getId()) {
-
-            case R.id.UploadBtn:
-                if(IMAGE_BASE_64.equals("") || IMAGE_BASE_64.equals(null)){
-                    ContextThemeWrapper ctw = new ContextThemeWrapper(UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
-                    final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
-                    alertDialogBuilder.setTitle("Image File Can't Empty");
-                    alertDialogBuilder.setMessage("Image File Can't Empty Please Add Image");
-                    alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-
-                    });
-                    alertDialogBuilder.show();
-                    return;
-                }
-                else{
-                    uploadImage();
-                }
-
-        }
-
-    }
-
-    private void uploadImage() {
-
+    private void SendDetail(String colid, String document_img1) {
+        final ProgressDialog loading = new ProgressDialog(UploadFile.this);
+        loading.setMessage("Please Wait...");
+        loading.show();
+        loading.setCanceledOnTouchOutside(false);
+        RetryPolicy mRetryPolicy = new DefaultRetryPolicy(0, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://arjun.jain.software/arjunguru/add_file.php",
                 new Response.Listener<String>() {
                     @Override
@@ -247,25 +205,107 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
 
                         }
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(UploadFile.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        loading.dismiss();
+                        if (error instanceof TimeoutError || error instanceof NoConnectionError) {
+                            ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
+                            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
+                            alertDialogBuilder.setTitle("No connection");
+                            alertDialogBuilder.setMessage(" Connection time out error please try again ");
+                            alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
 
-            }
+                                }
+                            });
+                            alertDialogBuilder.show();
+                        } else if (error instanceof AuthFailureError) {
+                            ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
+                            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
+                            alertDialogBuilder.setTitle("Connection Error");
+                            alertDialogBuilder.setMessage(" Authentication failure connection error please try again ");
+                            alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
 
-        }
-        ){
+                                }
+                            });
+                            alertDialogBuilder.show();
+                            //TODO
+                        } else if (error instanceof ServerError) {
+                            ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
+                            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
+                            alertDialogBuilder.setTitle("Connection Error");
+                            alertDialogBuilder.setMessage("Connection error please try again");
+                            alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+
+                                }
+                            });
+                            alertDialogBuilder.show();
+                            //TODO
+                        } else if (error instanceof NetworkError) {
+                            ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
+                            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
+                            alertDialogBuilder.setTitle("Connection Error");
+                            alertDialogBuilder.setMessage("Network connection error please try again");
+                            alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+
+                                }
+                            });
+                            alertDialogBuilder.show();
+                            //TODO
+                        } else if (error instanceof ParseError) {
+                            ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
+                            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
+                            alertDialogBuilder.setTitle("Error");
+                            alertDialogBuilder.setMessage("Parse error");
+                            alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+
+                                }
+                            });
+                            alertDialogBuilder.show();
+                        }
+//                        Toast.makeText(Login_Activity.this,error.toString(), Toast.LENGTH_LONG ).show();
+                    }
+                }){
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String,String> params = new HashMap<String, String>();
-                params.put("cid",cid);
-                params.put("imageuser",IMAGE_BASE_64);
-
-                return params;
+                Map<String,String> map = new HashMap<String,String>();
+                map.put("col_lead_id", UploadFile.this.colid);
+                map.put("user_image",Document_img1);
+                return map;
             }
         };
 
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        stringRequest.setRetryPolicy(mRetryPolicy);
+        requestQueue.add(stringRequest);
+    }
+
+
+    @Override
+    public void onClick(View v) {
+        if (Document_img1.equals("") || Document_img1 == null) {
+            ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
+            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
+            alertDialogBuilder.setTitle("Image File Can't Empty ");
+            alertDialogBuilder.setMessage("Image File Can't empty please select any one document");
+            alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+
+                }
+            });
+            alertDialogBuilder.show();
+            return;
+        }
+        else {
+            SendDetail(colid,Document_img1);
+
+        }
 
     }
 }

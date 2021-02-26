@@ -39,7 +39,6 @@
         android:background="@drawable/button_shape"
         android:text="Upload"
         android:textSize="18dp"
-        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/id_prof"/>
@@ -52,7 +51,6 @@
         android:layout_marginTop="30dp"
         android:text="View Image"
         android:textSize="15dp"
-        android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/UploadBtn"
         android:background="@drawable/button_shape"/>
