@@ -46,15 +46,15 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
     ImageView IDProf;
     Button Upload_Btn;
     Button view;
-    String colid;
+    String col_lead_id;
 
-    private String Document_img1="";
+    private String user_image="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload_file);
-        colid = getIntent().getStringExtra("leadid");
+        col_lead_id = getIntent().getStringExtra("leadid");
         IDProf=(ImageView)findViewById(R.id.id_prof);
         Upload_Btn=(Button)findViewById(R.id.UploadBtn);
         view = findViewById(R.id.btn_view);
@@ -74,7 +74,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
             if (options[item].equals("Take Photo"))
             {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                File f = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
+                File f = new File(Environment.getExternalStorageDirectory(), ".jpg");
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
                 startActivityForResult(intent, 1);
             }
@@ -97,7 +97,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
             if (requestCode == 1) {
                 File f = new File(Environment.getExternalStorageDirectory().toString());
                 for (File temp : Objects.requireNonNull(f.listFiles())) {
-                    if (temp.getName().equals("temp.jpg")) {
+                    if (temp.getName().equals(".jpg")) {
                         f = temp;
                         break;
                     }
@@ -108,6 +108,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
                     bitmap = BitmapFactory.decodeFile(f.getAbsolutePath(), bitmapOptions);
                     bitmap=getResizedBitmap(bitmap, 200);
                     IDProf.setImageBitmap(bitmap);
+                    Log.d("Image",""+bitmap);
                     BitMapToString(bitmap);
                     String path = android.os.Environment
                             .getExternalStorageDirectory()
@@ -134,7 +135,9 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
             } else if (requestCode == 2) {
                 Uri selectedImage = data.getData();
                 String[] filePath = { MediaStore.Images.Media.DATA };
+                assert selectedImage != null;
                 Cursor c = getContentResolver().query(selectedImage,filePath, null, null, null);
+                assert c != null;
                 c.moveToFirst();
                 int columnIndex = c.getColumnIndex(filePath[0]);
                 String picturePath = c.getString(columnIndex);
@@ -143,16 +146,19 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
                 thumbnail=getResizedBitmap(thumbnail, 200);
                 Log.w("image from gallery", picturePath+"");
                 IDProf.setImageBitmap(thumbnail);
+                Log.d("Image_code",""+thumbnail);
                 BitMapToString(thumbnail);
             }
         }
     }
-    public void BitMapToString(Bitmap userImage1) {
+    public String BitMapToString(Bitmap userImage1) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         userImage1.compress(Bitmap.CompressFormat.PNG, 50, baos);
         byte[] b = baos.toByteArray();
-        Document_img1 = Base64.encodeToString(b, Base64.DEFAULT);
-        Log.e("Base_64",""+Document_img1);
+        user_image = Base64.encodeToString(b, Base64.DEFAULT);
+        Log.e("Base_64",""+user_image);
+        return user_image;
+
     }
 
     public Bitmap getResizedBitmap(Bitmap image, int maxSize) {
@@ -170,31 +176,25 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
         return Bitmap.createScaledBitmap(image, width, height, true);
     }
 
-    private void SendDetail(String colid, String document_img1) {
+    private void SendDetail(String col_lead_id, String user_image) {
 
         RetryPolicy mRetryPolicy = new DefaultRetryPolicy(0, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://arjun.jain.software/arjunguru/add_file.php",
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        if (response.equals("Inserted")) {
-                            Log.e("CHECK",""+response);
-                            Toast.makeText(UploadFile.this, "Data Inserted", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(UploadFile.this, "I Don't Know", Toast.LENGTH_SHORT).show();
-                        }
+                response -> {
+                    if (response.equals("Inserted")) {
+                        Log.e("CHECK",""+response);
+                        Toast.makeText(UploadFile.this, "Inserted", Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(UploadFile.this, "I Don't Know", Toast.LENGTH_SHORT).show();
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-            }
+                }, error -> {
         }
         ){
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String,String> params = new HashMap<String, String>();
-                params.put("col_lead_id",colid);
-                params.put("user_image",document_img1);
+                Map<String,String> params = new HashMap<>();
+                params.put("col_lead_id",col_lead_id);
+                params.put("user_image",user_image);
                 Log.e("ERROR",""+params);
                 return params;
 
@@ -209,7 +209,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
 
     @Override
     public void onClick(View v) {
-        if (Document_img1.equals("") || Document_img1 == null) {
+        if (user_image.equals("") || user_image == null) {
             ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
             final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
             alertDialogBuilder.setTitle("Image File Can't Empty ");
@@ -220,10 +220,9 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
                 }
             });
             alertDialogBuilder.show();
-            return;
         }
         else {
-            SendDetail(colid,Document_img1);
+            SendDetail(col_lead_id,user_image);
 
         }
 
