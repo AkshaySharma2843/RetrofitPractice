@@ -54,7 +54,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload_file);
-        col_lead_id = getIntent().getStringExtra("leadid");
+        col_lead_id = getIntent().getStringExtra("col_lead_id");
         IDProf=(ImageView)findViewById(R.id.id_prof);
         Upload_Btn=(Button)findViewById(R.id.UploadBtn);
         view = findViewById(R.id.btn_view);
@@ -106,7 +106,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
                     Bitmap bitmap;
                     BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
                     bitmap = BitmapFactory.decodeFile(f.getAbsolutePath(), bitmapOptions);
-                    bitmap=getResizedBitmap(bitmap, 200);
+                    bitmap=getResizedBitmap(bitmap, 400);
                     IDProf.setImageBitmap(bitmap);
                     Log.d("Image",""+bitmap);
                     BitMapToString(bitmap);
@@ -119,7 +119,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
                     File file = new File(path, System.currentTimeMillis() + ".jpg");
                     try {
                         outFile = new FileOutputStream(file);
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outFile);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outFile);
                         outFile.flush();
                         outFile.close();
                     } catch (FileNotFoundException e) {
@@ -143,7 +143,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
                 String picturePath = c.getString(columnIndex);
                 c.close();
                 Bitmap thumbnail = (BitmapFactory.decodeFile(picturePath));
-                thumbnail=getResizedBitmap(thumbnail, 200);
+                thumbnail=getResizedBitmap(thumbnail, 400);
                 Log.w("image from gallery", picturePath+"");
                 IDProf.setImageBitmap(thumbnail);
                 Log.d("Image_code",""+thumbnail);
@@ -153,7 +153,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
     }
     public String BitMapToString(Bitmap userImage1) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        userImage1.compress(Bitmap.CompressFormat.PNG, 50, baos);
+        userImage1.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] b = baos.toByteArray();
         user_image = Base64.encodeToString(b, Base64.DEFAULT);
         Log.e("Base_64",""+user_image);
@@ -181,10 +181,11 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
         RetryPolicy mRetryPolicy = new DefaultRetryPolicy(0, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://arjun.jain.software/arjunguru/add_file.php",
                 response -> {
-                    if (response.equals("Inserted")) {
-                        Log.e("CHECK",""+response);
+                    if (response.contains("Inserted")) {
+                        Log.e("Image_Inserted",""+response);
                         Toast.makeText(UploadFile.this, "Inserted", Toast.LENGTH_SHORT).show();
                     }else{
+                        Log.e("Image_Error",""+response);
                         Toast.makeText(UploadFile.this, "I Don't Know", Toast.LENGTH_SHORT).show();
                     }
                 }, error -> {
@@ -192,10 +193,11 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
         ){
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String,String> params = new HashMap<>();
+                Map<String,String> params = new HashMap<String, String>();
                 params.put("col_lead_id",col_lead_id);
+                Log.e("ID",""+params);
                 params.put("user_image",user_image);
-                Log.e("ERROR",""+params);
+                Log.e("IMAGE",""+params);
                 return params;
 
 
@@ -209,22 +211,33 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
 
     @Override
     public void onClick(View v) {
-        if (user_image.equals("") || user_image == null) {
-            ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_AppCompat_Dialog_Alert);
-            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
-            alertDialogBuilder.setTitle("Image File Can't Empty ");
-            alertDialogBuilder.setMessage("Image File Can't empty please select any one document");
-            alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
+        switch (v.getId()){
+
+            case R.id.UploadBtn:
+                if (user_image.equals("") || user_image == null) {
+                    ContextThemeWrapper ctw = new ContextThemeWrapper( UploadFile.this, R.style.Theme_RetrofitPractice);
+                    final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ctw);
+                    alertDialogBuilder.setTitle("Image File Can't Empty ");
+                    alertDialogBuilder.setMessage("Image File Can't empty please select any one document");
+                    alertDialogBuilder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+
+                        }
+                    });
+                    alertDialogBuilder.show();
+                }
+                else {
+                    SendDetail(col_lead_id,user_image);
 
                 }
-            });
-            alertDialogBuilder.show();
-        }
-        else {
-            SendDetail(col_lead_id,user_image);
+                break;
+
+            case R.id.btn_view:
+
+                break;
 
         }
+
 
     }
 }
