@@ -194,7 +194,7 @@ public class UploadFile extends AppCompatActivity implements View.OnClickListene
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String,String> params = new HashMap<String, String>();
-                params.put("col_lead_id",col_lead_id);
+                params.put("col_lead_id","1");
                 Log.e("ID",""+params);
                 params.put("user_image",user_image);
                 Log.e("IMAGE",""+params);
