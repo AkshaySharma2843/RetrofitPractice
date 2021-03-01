@@ -25,7 +25,6 @@ public class ViewUploadedFile extends AppCompatActivity {
     ArrayList<ImageModel> imageModelList = new ArrayList<>();
     RecyclerView recyclerView;
     String col_id;
-    String id = "";
     ImageModel imageModel;
     ViewUploadedAdapter adapter;
 
@@ -39,16 +38,13 @@ public class ViewUploadedFile extends AppCompatActivity {
     }
 
     private void getImage() {
-        if(id.equals(col_id)){
-
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, "http://arjun.jain.software/arjunguru/get_image.php",
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, "http://arjun.jain.software/arjunguru/get_image.php?col_lead_id="+col_id,
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             imageModelList.clear();
                             try {
                                 Log.e("jokjkjk", response);
-                                // JSONObject jsonObject = new JSONObject(response);
                                 JSONArray jsonArray = new JSONArray(response);
 
 
@@ -83,8 +79,9 @@ public class ViewUploadedFile extends AppCompatActivity {
             });
             RequestQueue requestQueue = Volley.newRequestQueue(this);
             requestQueue.add(stringRequest);
-        }
+
     }
+
 
     private void initView() {
         recyclerView = findViewById(R.id.rec_view_image);

@@ -1,14 +1,24 @@
 package com.retex.retrofitpractice;
 
-public class ImageModel {
-    String id;
-    String col_lead_id;
-    String user_image;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
-    public ImageModel(String id, String col_lead_id, String user_image) {
+public class ImageModel {
+
+    @SerializedName("id")
+    @Expose
+    private String id;
+    @SerializedName("col_lead_id")
+    @Expose
+    private String colLeadId;
+    @SerializedName("user_image")
+    @Expose
+    private String userImage;
+
+    public ImageModel(String id, String colLeadId, String userImage) {
         this.id = id;
-        this.col_lead_id = col_lead_id;
-        this.user_image = user_image;
+        this.colLeadId = colLeadId;
+        this.userImage = userImage;
     }
 
     public String getId() {
@@ -19,19 +29,20 @@ public class ImageModel {
         this.id = id;
     }
 
-    public String getCol_lead_id() {
-        return col_lead_id;
+    public String getColLeadId() {
+        return colLeadId;
     }
 
-    public void setCol_lead_id(String col_lead_id) {
-        this.col_lead_id = col_lead_id;
+    public void setColLeadId(String colLeadId) {
+        this.colLeadId = colLeadId;
     }
 
-    public String getUser_image() {
-        return user_image;
+    public String getUserImage() {
+        return userImage;
     }
 
-    public void setUser_image(String user_image) {
-        this.user_image = user_image;
+    public void setUserImage(String userImage) {
+        this.userImage = userImage;
     }
+
 }

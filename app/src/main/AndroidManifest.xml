@@ -15,14 +15,16 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.RetrofitPractice">
-        <activity android:name=".ViewUploadedFile"></activity>
-        <activity android:name=".UploadFile">
+        <activity android:name=".ViewUploadedFile">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".UploadFile">
         </activity>
         <activity android:name=".Register" />
         <activity android:name=".Login" />
