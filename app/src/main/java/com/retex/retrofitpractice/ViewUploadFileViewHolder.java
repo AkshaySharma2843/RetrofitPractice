@@ -20,7 +20,7 @@ public class ViewUploadFileViewHolder extends RecyclerView.ViewHolder {
 
     public void bind(ImageModel imageModels, Context context) {
         Glide.with(itemView.getContext())
-                .load(imageModels.getUser_image())
+                .load(imageModels.getUserImage())
                 .into(view_image);
 
 
